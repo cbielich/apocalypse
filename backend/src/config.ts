@@ -3,6 +3,8 @@ import path from 'node:path';
 export const config = {
   port: Number(process.env.PORT || 4000),
   dataDir: process.env.DATA_DIR || path.join(process.cwd(), 'data'),
+  // Comma-separated allowed origins for CORS. Empty = allow any (dev default).
+  corsOrigin: process.env.CORS_ORIGIN || '',
   // How often to poll the data source. Default: every 5 minutes.
   pollCron: process.env.POLL_CRON || '*/5 * * * *',
   // OpenSky publishes a full aircraft registry CSV (icao24 -> typecode). We use

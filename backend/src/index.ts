@@ -8,7 +8,10 @@ import './db';
 
 async function main(): Promise<void> {
   const app = Fastify({ logger: false });
-  await app.register(cors, { origin: true });
+  const corsOrigin = config.corsOrigin
+    ? config.corsOrigin.split(',').map((s) => s.trim())
+    : true;
+  await app.register(cors, { origin: corsOrigin });
   await registerRoutes(app);
 
   app.setErrorHandler((err: Error & { statusCode?: number }, _req, reply) => {

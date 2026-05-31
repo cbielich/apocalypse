@@ -1,0 +1,46 @@
+# Production deployment for the shared EC2 (host nginx + Laravel Sail already
+# present). Mirrors the existing site's pattern: the frontend publishes to a
+# LOCALHOST-only port, and host nginx reverse-proxies the domain to it.
+# The backend stays private on an internal Docker network.
+#
+# Usage (from the repo root on the EC2):
+#   docker compose -f deploy/docker-compose.prod.yml up -d --build
+services:
+  backend:
+    build: ../backend
+    environment:
+      - PORT=4000
+      - DATA_DIR=/data
+      - POLL_CRON=*/5 * * * *
+      - CORS_ORIGIN=https://apocalypsetracker.com
+      # - OPENSKY_CLIENT_ID=...
+      # - OPENSKY_CLIENT_SECRET=...
+      # - NASA_API_KEY=...
+    volumes:
+      - jetdata:/data
+    networks:
+      - apocalypse_internal
+    restart: unless-stopped
+
+  frontend:
+    build: ../frontend
+    container_name: apocalypse-frontend
+    environment:
+      - BACKEND_INTERNAL=http://backend:4000
+      - PORT=3000
+    # Bind to localhost only — host nginx proxies to it (8080 is taken by the
+    # Laravel app, so this uses 8090).
+    ports:
+      - "127.0.0.1:8090:3000"
+    depends_on:
+      - backend
+    networks:
+      - apocalypse_internal
+    restart: unless-stopped
+
+networks:
+  apocalypse_internal:
+    driver: bridge
+
+volumes:
+  jetdata:

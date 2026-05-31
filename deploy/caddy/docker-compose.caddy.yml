@@ -1,0 +1,33 @@
+# Reverse proxy for the case where the EC2 has NO existing proxy.
+# Caddy binds 80/443 and routes apocalypsetracker.com to the frontend container,
+# handling TLS automatically.
+#
+# Usage:
+#   docker network create web        # once (shared with the app)
+#   docker compose -f deploy/caddy/docker-compose.caddy.yml up -d
+#
+# NOTE: if your existing site currently binds 80/443 directly, stop it from
+# publishing those ports and route it through this Caddy too (add a block in
+# the Caddyfile), otherwise the port bind will conflict.
+services:
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - web
+    restart: unless-stopped
+
+networks:
+  web:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:

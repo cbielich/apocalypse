@@ -1,0 +1,10 @@
+# Caddy automatically provisions and renews a Let's Encrypt TLS certificate
+# for this domain. Point apocalypsetracker.com's DNS A record at the EC2 first.
+apocalypsetracker.com {
+	reverse_proxy apocalypse-frontend:3000
+}
+
+# If you also want the bare/www variant, uncomment:
+# www.apocalypsetracker.com {
+# 	redir https://apocalypsetracker.com{uri}
+# }

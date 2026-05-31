@@ -1,0 +1,31 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      - PORT=4000
+      - DATA_DIR=/data
+      - POLL_CRON=*/5 * * * *
+      # Optional: OAuth2 client credentials for higher OpenSky rate limits.
+      # - OPENSKY_CLIENT_ID=your_id
+      # - OPENSKY_CLIENT_SECRET=your_secret
+      # Optional: restrict to a region "lamin,lomin,lamax,lomax".
+      # - OPENSKY_BBOX=24,-125,49,-66   # continental US
+    volumes:
+      - jetdata:/data
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      - BACKEND_INTERNAL=http://backend:4000
+      - PORT=3000
+    depends_on:
+      - backend
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+
+volumes:
+  jetdata:

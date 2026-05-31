@@ -1,11 +1,10 @@
 import { db } from '../db';
-import { getJetTypeMap } from '../jets/registry';
-import { openSkySource } from '../sources/opensky';
+import { airplanesLiveSource } from '../sources/airplaneslive';
 import type { Jet, JetSource } from '../sources/types';
 
 // Swap this to a different JetSource implementation (ADS-B Exchange, FlightAware)
 // to change providers — nothing else needs to change.
-const source: JetSource = openSkySource;
+const source: JetSource = airplanesLiveSource;
 
 export interface Snapshot {
   jets: Jet[];
@@ -28,20 +27,13 @@ function hourOfWeek(date: Date): number {
 
 export async function runPoll(): Promise<void> {
   try {
-    const typeMap = await getJetTypeMap();
-    const jetSet = new Set(typeMap.keys());
-    const jets = await source.fetchAirborneJets(jetSet);
-    for (const j of jets) {
-      const info = typeMap.get(j.icao24);
-      j.type = info?.type ?? null;
-      j.model = info?.model ?? null;
-    }
+    const jets = await source.fetchAirborneJets();
     const now = new Date();
     latest = { jets, count: jets.length, ts: now.getTime() };
     insertCount.run(now.getTime(), jets.length, hourOfWeek(now));
     console.log(
       `[poll] ${now.toISOString()} airborne business jets: ${jets.length} ` +
-        `(registry ${jetSet.size}, source ${source.name})`,
+        `(source ${source.name})`,
     );
   } catch (err) {
     console.error('[poll] failed:', (err as Error).message);

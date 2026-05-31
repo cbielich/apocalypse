@@ -7,6 +7,9 @@ FROM node:22-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# NEXT_PUBLIC_* must be present at build time so Next can inline them.
+ARG NEXT_PUBLIC_ADSENSE_CLIENT=""
+ENV NEXT_PUBLIC_ADSENSE_CLIENT=$NEXT_PUBLIC_ADSENSE_CLIENT
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

@@ -12,11 +12,12 @@ export interface Jet {
 }
 
 /**
- * A pluggable flight-data source. Swap OpenSky for ADS-B Exchange / FlightAware
- * later by implementing this interface and changing the import in poller/poll.ts.
+ * A pluggable flight-data source. Swap providers (ADS-B Exchange / FlightAware)
+ * by implementing this interface and changing the import in poller/poll.ts.
+ * The source is responsible for returning airborne business jets with type/model.
  */
 export interface JetSource {
   name: string;
-  /** Return all currently-airborne aircraft whose icao24 is in `jetIcaos`. */
-  fetchAirborneJets(jetIcaos: Set<string>): Promise<Jet[]>;
+  /** Return all currently-airborne business jets, with type/model populated. */
+  fetchAirborneJets(): Promise<Jet[]>;
 }

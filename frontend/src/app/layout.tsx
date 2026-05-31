@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import Nav from '../components/Nav';
 import './globals.css';
+
+// Google AdSense publisher ID (e.g. "ca-pub-...."). Set via ADSENSE_CLIENT in
+// .env -> passed as the NEXT_PUBLIC_ADSENSE_CLIENT build arg. Empty = ads off.
+const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://apocalypsetracker.com'),
@@ -13,6 +18,8 @@ export const metadata: Metadata = {
     url: 'https://apocalypsetracker.com',
     siteName: 'Apocalypse Tracker',
   },
+  // AdSense site-verification meta tag.
+  other: ADSENSE_CLIENT ? { 'google-adsense-account': ADSENSE_CLIENT } : {},
 };
 
 export const viewport: Viewport = {
@@ -31,6 +38,15 @@ export default function RootLayout({
       <body>
         <Nav />
         {children}
+        {ADSENSE_CLIENT && (
+          <Script
+            id="adsbygoogle-init"
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );

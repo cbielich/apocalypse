@@ -21,10 +21,14 @@ cd /home/ubuntu
 git clone https://github.com/cbielich/apocalypse.git   # or: cd apocalypse && git pull
 cd apocalypse
 
-# 2. Start the app (frontend on 127.0.0.1:8090, backend private)
-docker compose -f deploy/docker-compose.prod.yml up -d --build
+# 2. Configure secrets (AdSense ID, NASA key)
+cp .env.example .env
+nano .env            # set ADSENSE_CLIENT and NASA_API_KEY
 
-# 3. Confirm it's serving locally
+# 3. Build + start (frontend on 127.0.0.1:8090, backend private)
+./deploy.sh          # pulls, builds, restarts, health-checks
+
+# 4. Confirm it's serving locally
 curl -I http://127.0.0.1:8090            # expect HTTP 200
 
 # 4. Add the nginx vhost and reload
@@ -46,10 +50,14 @@ Verify: `curl -I https://apocalypsetracker.com` → 200, and
 
 - **Port 8090** is used because the Laravel app already holds 8080. Change it in
   both `deploy/docker-compose.prod.yml` and the nginx `proxy_pass` if needed.
+- **Jet data** comes from **airplanes.live** (free, key-less, AWS-reachable).
+  OpenSky was dropped because it blocks AWS datacenter IPs.
+- **Secrets** live in `.env` (gitignored): `ADSENSE_CLIENT` (inlined into the
+  frontend at build) and `NASA_API_KEY` (dashboard asteroid signal). `deploy.sh`
+  loads `.env` automatically.
 - **CORS** is locked to `https://apocalypsetracker.com` via `CORS_ORIGIN`.
-- Set a real **`NASA_API_KEY`** (DEMO_KEY is rate-limited) and any OpenSky creds
-  in the prod compose env block.
-- **Updates**: `git pull && docker compose -f deploy/docker-compose.prod.yml up -d --build`.
+- **Updates / redeploys**: just run **`./deploy.sh`** (git pull + build + restart
+  + health check). Changing `ADSENSE_CLIENT` requires a rebuild — deploy.sh does that.
 - The `jetdata` volume persists the SQLite history across restarts.
 
 ## Not needed for this EC2

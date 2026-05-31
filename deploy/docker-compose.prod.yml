@@ -13,9 +13,6 @@ services:
       - DATA_DIR=/data
       - POLL_CRON=*/5 * * * *
       - CORS_ORIGIN=https://apocalypsetracker.com
-      # - OPENSKY_CLIENT_ID=...
-      # - OPENSKY_CLIENT_SECRET=...
-      # - NASA_API_KEY=...
     volumes:
       - jetdata:/data
     networks:
@@ -23,11 +20,17 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ../frontend
+    build:
+      context: ../frontend
+      args:
+        # AdSense publisher ID, inlined at build (from .env -> ADSENSE_CLIENT).
+        NEXT_PUBLIC_ADSENSE_CLIENT: ${ADSENSE_CLIENT:-}
     container_name: apocalypse-frontend
     environment:
       - BACKEND_INTERNAL=http://backend:4000
       - PORT=3000
+      # Used by the dashboard's Near-Earth Asteroids signal (runs in the frontend).
+      - NASA_API_KEY=${NASA_API_KEY:-}
     # Bind to localhost only — host nginx proxies to it (8080 is taken by the
     # Laravel app, so this uses 8090).
     ports:

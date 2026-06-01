@@ -3,9 +3,11 @@ import Script from 'next/script';
 import Nav from '../components/Nav';
 import './globals.css';
 
-// Google AdSense publisher ID (e.g. "ca-pub-...."). Set via ADSENSE_CLIENT in
-// .env -> passed as the NEXT_PUBLIC_ADSENSE_CLIENT build arg. Empty = ads off.
-const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT || '';
+// Google AdSense publisher ID. Defaults to the site's pub ID so the
+// verification meta tag + script always render; override via ADSENSE_CLIENT in
+// .env -> NEXT_PUBLIC_ADSENSE_CLIENT build arg. (Publisher IDs aren't secret.)
+const ADSENSE_CLIENT =
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-9360752375665568';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://apocalypsetracker.com'),

@@ -641,6 +641,12 @@ body {
 }
 
 /* Ads */
+.ad-unit {
+  display: block;
+  width: 100%;
+  min-height: 90px;
+}
+
 .ad-slot {
   width: 100%;
   min-height: 90px;

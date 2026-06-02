@@ -23,8 +23,9 @@ services:
     build:
       context: ../frontend
       args:
-        # AdSense publisher ID, inlined at build (from .env -> ADSENSE_CLIENT).
+        # AdSense IDs, inlined at build (from .env -> ADSENSE_CLIENT / ADSENSE_SLOT).
         NEXT_PUBLIC_ADSENSE_CLIENT: ${ADSENSE_CLIENT:-}
+        NEXT_PUBLIC_ADSENSE_SLOT: ${ADSENSE_SLOT:-}
     container_name: apocalypse-frontend
     environment:
       - BACKEND_INTERNAL=http://backend:4000

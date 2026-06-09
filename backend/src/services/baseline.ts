@@ -17,12 +17,18 @@ export interface Status {
   samples: number;
   totalSamples: number;
   calibrating: boolean;
+  basis: 'recent' | 'hour-of-week';
   updatedAt: number;
   message: string;
 }
 
+const DAY_MS = 86_400_000;
+
 const totalStmt = db.prepare('SELECT COUNT(*) as n FROM counts');
-const bucketStmt = db.prepare('SELECT count FROM counts WHERE hour_of_week = ?');
+const recentStmt = db.prepare('SELECT count FROM counts WHERE ts >= ?');
+const bucketStmt = db.prepare(
+  'SELECT count FROM counts WHERE ts >= ? AND hour_of_week = ?',
+);
 const globalStmt = db.prepare('SELECT count FROM counts');
 
 function stats(values: number[]): { mean: number; std: number } {
@@ -31,6 +37,8 @@ function stats(values: number[]): { mean: number; std: number } {
   const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
   return { mean, std: Math.sqrt(variance) };
 }
+
+const round1 = (x: number) => Math.round(x * 10) / 10;
 
 const MESSAGES: Record<Level, string> = {
   CALIBRATING: 'Calibrating baseline — not enough history yet to detect anomalies.',
@@ -54,15 +62,40 @@ export function getStatus(): Status {
       samples: total,
       totalSamples: total,
       calibrating: true,
+      basis: 'recent',
       updatedAt: snap.ts,
       message: MESSAGES.CALIBRATING,
     };
   }
 
-  const now = new Date();
-  const how = now.getUTCDay() * 24 + now.getUTCHours();
-  let sample = (bucketStmt.all(how) as { count: number }[]).map((r) => r.count);
-  if (sample.length < config.minSamplesForBucket) {
+  const now = Date.now();
+  const d = new Date(now);
+  const how = d.getUTCDay() * 24 + d.getUTCHours();
+
+  // Default baseline: the recent rolling window (e.g. last 7 days). This tracks
+  // the current overall level, so gradual drift doesn't read as an anomaly —
+  // the count is judged "unusual vs. lately", not vs. one stale week-old sample.
+  let basis: Status['basis'] = 'recent';
+  let sample = (
+    recentStmt.all(now - config.baselineWindowDays * DAY_MS) as { count: number }[]
+  ).map((r) => r.count);
+
+  // Once there are several weeks of history, prefer the time-of-day pattern,
+  // computed over a longer window that still includes the most recent week.
+  if (total >= config.bucketReadySamples) {
+    const bucket = (
+      bucketStmt.all(now - config.bucketWindowDays * DAY_MS, how) as {
+        count: number;
+      }[]
+    ).map((r) => r.count);
+    if (bucket.length >= config.minSamplesForBucket) {
+      sample = bucket;
+      basis = 'hour-of-week';
+    }
+  }
+
+  // Safety net: never compute against an empty set.
+  if (sample.length === 0) {
     sample = (globalStmt.all() as { count: number }[]).map((r) => r.count);
   }
 
@@ -81,11 +114,12 @@ export function getStatus(): Status {
   return {
     level,
     count,
-    mean: Math.round(mean * 10) / 10,
-    std: Math.round(std * 10) / 10,
+    mean: round1(mean),
+    std: round1(std),
     samples: sample.length,
     totalSamples: total,
     calibrating: false,
+    basis,
     updatedAt: snap.ts,
     message: MESSAGES[level],
   };

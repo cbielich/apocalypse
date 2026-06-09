@@ -18,9 +18,10 @@ interface RawAc {
 }
 
 const HEADERS = { 'User-Agent': 'apocalypsetracker.com (+https://apocalypsetracker.com)' };
-const CONCURRENCY = 3; // be gentle on the free community API
 const FT_TO_M = 0.3048;
 const KT_TO_MS = 0.514444;
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // Rough country from registration (tail number) prefix. Business jets are
 // mostly N-registered (US), with common offshore/European marks covered here.
@@ -86,17 +87,23 @@ export const airplanesLiveSource: JetSource = {
     const types = [...BUSINESS_JET_TYPES];
     const seen = new Set<string>();
     const jets: Jet[] = [];
-    for (let i = 0; i < types.length; i += CONCURRENCY) {
-      const batch = types.slice(i, i + CONCURRENCY);
-      const results = await Promise.allSettled(batch.map(fetchType));
-      for (const r of results) {
-        if (r.status !== 'fulfilled') continue;
-        for (const j of r.value) {
+    let failed = 0;
+    // Sequential with a delay — airplanes.live rate-limits bursts (429), which
+    // would silently drop most aircraft types. ~1 req/s keeps every type.
+    for (const t of types) {
+      try {
+        for (const j of await fetchType(t)) {
           if (seen.has(j.icao24)) continue; // an aircraft can match only one type, but guard anyway
           seen.add(j.icao24);
           jets.push(j);
         }
+      } catch {
+        failed++;
       }
+      await sleep(config.airplanesLive.requestDelayMs);
+    }
+    if (failed) {
+      console.warn(`[airplanes.live] ${failed}/${types.length} type queries failed`);
     }
     return jets;
   },

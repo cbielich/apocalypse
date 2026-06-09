@@ -11,6 +11,10 @@ export const config = {
   // aircraft type/model inline (so no separate registry is needed).
   airplanesLive: {
     baseUrl: process.env.AIRPLANES_LIVE_URL || 'https://api.airplanes.live/v2',
+    // Delay between per-type queries. airplanes.live rate-limits above ~1 req/s,
+    // so space them out (one type query per poll-cycle is fine; ~75s for ~70
+    // types, well inside the 5-minute poll interval).
+    requestDelayMs: Number(process.env.AIRPLANES_DELAY_MS || 1100),
   },
   // Baseline calibration / adaptivity.
   minSamplesCalibrated: Number(process.env.MIN_SAMPLES_CALIBRATED || 24),

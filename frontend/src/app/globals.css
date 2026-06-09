@@ -184,6 +184,88 @@ body {
   line-height: 1.6;
 }
 
+/* Apocalypse Index — the standout headline gauge */
+.apoc-index {
+  text-align: center;
+  background: linear-gradient(180deg, #15151e 0%, #0d0d14 100%);
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  padding: clamp(1.25rem, 5vw, 2.25rem);
+}
+
+.apoc-index-label {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.apoc-index-score {
+  font-size: clamp(3rem, 15vw, 6rem);
+  font-weight: 900;
+  line-height: 1;
+  margin-top: 0.3rem;
+}
+
+.apoc-index-score span {
+  font-size: 0.26em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.apoc-index-status {
+  font-size: clamp(1.1rem, 5vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  margin-top: 0.15rem;
+}
+
+.apoc-meter {
+  position: relative;
+  height: 12px;
+  max-width: 560px;
+  margin: 1.1rem auto 0.6rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #22c55e 0%,
+    #eab308 40%,
+    #f97316 62%,
+    #ef4444 82%,
+    #b91c1c 100%
+  );
+}
+
+.apoc-meter-marker {
+  position: absolute;
+  top: -5px;
+  width: 4px;
+  height: 22px;
+  background: #fff;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
+}
+
+.apoc-index-sub {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.apoc-index.pulse .apoc-index-status {
+  animation: apocblink 1.2s ease-in-out infinite;
+}
+
+@keyframes apocblink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
 /* Dashboard cards */
 .card-grid {
   display: grid;

@@ -37,6 +37,12 @@ const TIP_ASTEROID =
   'Near-Earth asteroids making a close approach today, and how many are flagged "potentially hazardous." Source: NASA NeoWs.';
 const TIP_TSUNAMI =
   'Active tsunami warnings issued by the US National Weather Service. Source: NWS.';
+const TIP_SOLARWIND =
+  'Speed of the solar wind streaming past Earth (km/s). Sustained high speed (>500–700) drives geomagnetic storms. Source: NOAA DSCOVR.';
+const TIP_FIREBALL =
+  'Bright meteors (fireballs) detected entering the atmosphere in the last 30 days, and the largest impact energy in kilotons. Source: NASA JPL.';
+const TIP_VOLCANO =
+  'US volcanoes currently above normal alert level (Advisory / Watch / Warning). Source: USGS Volcano Hazards Program.';
 
 async function getJson(url: string, headers?: Record<string, string>): Promise<unknown> {
   // Cache external signals for 120s so traffic can't trip provider rate limits
@@ -240,15 +246,95 @@ async function tsunami(): Promise<Sig> {
   }
 }
 
+async function solarWind(): Promise<Sig> {
+  try {
+    const j = (await getJson(
+      'https://services.swpc.noaa.gov/products/solar-wind/plasma-1-day.json',
+    )) as string[][];
+    const last = j[j.length - 1];
+    const speed = Number(last[2]);
+    const level: SigLevel = speed >= 700 ? 'alert' : speed >= 500 ? 'watch' : 'calm';
+    return {
+      title: 'Solar Wind',
+      value: `${Math.round(speed)} km/s`,
+      sub: speed >= 500 ? 'Elevated stream' : 'Nominal',
+      level,
+      tip: TIP_SOLARWIND,
+    };
+  } catch {
+    return { title: 'Solar Wind', value: '—', sub: 'NOAA unavailable', level: 'unknown', tip: TIP_SOLARWIND };
+  }
+}
+
+async function fireballs(): Promise<Sig> {
+  try {
+    const since = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    const j = (await getJson(
+      `https://ssd-api.jpl.nasa.gov/fireball.api?date-min=${since}&sort=-date&req-loc=false`,
+    )) as { fields?: string[]; data?: string[][] };
+    const rows = j.data ?? [];
+    const ei = (j.fields ?? []).indexOf('impact-e');
+    let maxKt = 0;
+    for (const row of rows) {
+      const kt = ei >= 0 ? Number(row[ei]) : NaN;
+      if (Number.isFinite(kt) && kt > maxKt) maxKt = kt;
+    }
+    const level: SigLevel = maxKt >= 50 ? 'alert' : maxKt >= 5 ? 'watch' : 'calm';
+    return {
+      title: 'Fireballs (30d)',
+      value: String(rows.length),
+      sub: rows.length ? `max ${maxKt.toFixed(1)} kt` : 'none detected',
+      level,
+      tip: TIP_FIREBALL,
+    };
+  } catch {
+    return { title: 'Fireballs (30d)', value: '—', sub: 'NASA unavailable', level: 'unknown', tip: TIP_FIREBALL };
+  }
+}
+
+async function volcanoes(): Promise<Sig> {
+  try {
+    const j = (await getJson(
+      'https://volcanoes.usgs.gov/hans-public/api/volcano/getElevatedVolcanoes',
+    )) as { alert_level?: string; color_code?: string }[];
+    const n = j.length;
+    const hasRed = j.some((v) => v.color_code === 'RED' || v.alert_level === 'WARNING');
+    const hasOrange = j.some((v) => v.color_code === 'ORANGE' || v.alert_level === 'WATCH');
+    const level: SigLevel = hasRed ? 'alert' : hasOrange ? 'watch' : 'calm';
+    return {
+      title: 'Volcanoes (US)',
+      value: String(n),
+      sub: hasRed ? 'Warning level' : hasOrange ? 'Watch level' : n ? 'Advisory' : 'All normal',
+      level,
+      tip: TIP_VOLCANO,
+    };
+  } catch {
+    return { title: 'Volcanoes (US)', value: '—', sub: 'USGS unavailable', level: 'unknown', tip: TIP_VOLCANO };
+  }
+}
+
+// Bands for the composite Apocalypse Index (0–100).
+function indexBand(score: number | null): { word: string; color: string; pulse: boolean } {
+  if (score == null) return { word: 'UNKNOWN', color: '#6b7280', pulse: false };
+  if (score < 20) return { word: 'DORMANT', color: '#22c55e', pulse: false };
+  if (score < 40) return { word: 'RESTLESS', color: '#eab308', pulse: false };
+  if (score < 60) return { word: 'ELEVATED', color: '#f97316', pulse: false };
+  if (score < 80) return { word: 'CRITICAL', color: '#ef4444', pulse: true };
+  return { word: 'APOCALYPTIC', color: '#b91c1c', pulse: true };
+}
+
 export default async function DashboardPage() {
   const results = await Promise.allSettled<Sig>([
     jetSignal(),
     quakes(),
+    volcanoes(),
     spaceWeather(),
     solarFlare(),
+    solarWind(),
     severeWeather(),
     tsunami(),
     asteroids(),
+    fireballs(),
     fearGreed(),
     bitcoin(),
   ]);
@@ -258,6 +344,15 @@ export default async function DashboardPage() {
       : { title: 'Signal', value: '—', sub: 'unavailable', level: 'unknown', tip: '' },
   );
 
+  // Composite Apocalypse Index: roll every known signal into one 0–100 score.
+  const scored = signals.filter((s) => s.level !== 'unknown');
+  const points = scored.reduce(
+    (a, s) => a + (s.level === 'alert' ? 2 : s.level === 'watch' ? 1 : 0),
+    0,
+  );
+  const index = scored.length ? Math.round((points / (scored.length * 2)) * 100) : null;
+  const band = indexBand(index);
+
   return (
     <main className="container">
       <header className="page-head">
@@ -266,6 +361,27 @@ export default async function DashboardPage() {
           A board of signals worth watching. Green is good. Red is… less good.
         </p>
       </header>
+
+      <section
+        className={`apoc-index${band.pulse ? ' pulse' : ''}`}
+        style={{ borderColor: band.color, boxShadow: `0 0 50px -12px ${band.color}` }}
+      >
+        <div className="apoc-index-label">Apocalypse Index</div>
+        <div className="apoc-index-score" style={{ color: band.color }}>
+          {index ?? '—'}
+          <span>/100</span>
+        </div>
+        <div className="apoc-index-status" style={{ color: band.color }}>
+          {band.word}
+        </div>
+        <div className="apoc-meter" aria-hidden="true">
+          <span className="apoc-meter-marker" style={{ left: `${index ?? 0}%` }} />
+        </div>
+        <div className="apoc-index-sub">
+          {scored.length} signals · {points} risk points
+        </div>
+      </section>
+
       <AdSlot id="dash-top" />
       <section className="card-grid">
         {signals.map((s, i) => (

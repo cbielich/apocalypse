@@ -31,7 +31,16 @@ Frontend: Next.js App Router. SSR (`dynamic = 'force-dynamic'`).
 | /faq | `app/faq/page.tsx` | `app/layout.tsx` | no | Static methodology/FAQ |
 | /embed | `app/embed/page.tsx` | `app/layout.tsx` | no | Badge preview + HTML/Markdown embed snippets |
 
-Home also renders `SubscribeForm` (POSTs to `/api/subscribe`). `app/opengraph-image.tsx` generates the dynamic social share image reflecting the live status.
+### Generated / Metadata Routes
+
+These are Next.js file-based metadata routes (no page component) used for SEO:
+
+| Path | Source | Notes |
+|------|--------|-------|
+| /sitemap.xml | `app/sitemap.ts` | Lists all 7 frontend routes; home `priority 1`/`hourly`, others `0.7`/`weekly` |
+| /robots.txt | `app/robots.ts` | Allows all crawlers, disallows `/api/`, points to `/sitemap.xml` |
+
+Home also renders `SubscribeForm` (POSTs to `/api/subscribe`). `app/opengraph-image.tsx` generates the dynamic social share image reflecting the live status. JSON-LD structured data is emitted via `components/JsonLd.tsx` (WebSite/Organization in `layout.tsx`, WebApplication/Dataset on Home, FAQPage on `/faq`).
 
 Shared `Nav` (`components/Nav.tsx`) is rendered in `app/layout.tsx` on every page.
 

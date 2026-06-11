@@ -4,9 +4,9 @@ import { fetchStatus } from '../../lib/api';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Global Signals — Apocalypse Tracker',
+  title: 'Live Global Disaster Tracker — Doomsday Signals | Apocalypse Tracker',
   description:
-    'A live board of global signals: private-jet activity, earthquakes, solar storms, and markets.',
+    'A live global disaster tracker: real-time doomsday signals — earthquakes, solar storms, volcanoes, asteroids, markets, and private-jet activity, combined into one Apocalypse Index.',
 };
 
 type SigLevel = 'calm' | 'watch' | 'alert' | 'unknown';
@@ -356,9 +356,9 @@ export default async function DashboardPage() {
   return (
     <main className="container">
       <header className="page-head">
-        <h1>Global Signals</h1>
+        <h1>Global Disaster Tracker</h1>
         <p className="subtitle">
-          A board of signals worth watching. Green is good. Red is… less good.
+          Live doomsday signals worth watching. Green is good. Red is… less good.
         </p>
       </header>
 

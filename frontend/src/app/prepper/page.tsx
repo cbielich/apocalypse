@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import AdSlot from '../../components/AdSlot';
 
 export const metadata: Metadata = {
-  title: 'The Prepper Guide — Apocalypse Tracker',
+  title: 'Prepper Guide & Bug-Out Bag Checklist | Apocalypse Tracker',
   description:
     'A practical, in-depth preparedness guide: water, food, power, shelter, first aid, documents, the bug-out bag, and how to decide between leaving and staying put.',
 };
@@ -186,6 +186,23 @@ export default function PrepperPage() {
           can provide: competence. Start small, build the habit, and check back on
           the meter now and then.
         </p>
+
+        <h2>Quick-reference: your 72-hour emergency checklist</h2>
+        <p>
+          If you do nothing else, work down this list. It&apos;s the whole guide
+          compressed into a single emergency-preparedness checklist you can knock
+          out over a weekend:
+        </p>
+        <ul>
+          <li>Water: 1 gallon per person per day, three days minimum, plus a filter.</li>
+          <li>Food: three days of no-cook calories and a manual can opener.</li>
+          <li>Light &amp; power: headlamps, charged power banks, a hand-crank weather radio.</li>
+          <li>Warmth: mylar blankets, layered clothing, and a reliable way to make fire.</li>
+          <li>First aid: a real kit, two weeks of any prescriptions, and the skills to use them.</li>
+          <li>Documents &amp; cash: copies of IDs and small bills in a grab-and-go pouch.</li>
+          <li>The go-bag: one per adult, staged by the door, ready in minutes.</li>
+          <li>The plan: a meeting point, an out-of-area contact, and two evacuation routes.</li>
+        </ul>
       </article>
 
       <AdSlot id="prepper-bottom" />

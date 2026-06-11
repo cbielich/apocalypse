@@ -4,9 +4,9 @@ import { fetchRecords, type Records } from '../../lib/api';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
-  title: 'Records — Apocalypse Tracker',
+  title: 'Most Private Jets in the Air Ever — Records | Apocalypse Tracker',
   description:
-    'All-time records for global business-jet activity: the busiest moment, biggest surge, and long-run average.',
+    'The most private jets in the air ever, the biggest single surge, the quietest moment, and the long-run average — all-time records for worldwide business-jet activity.',
 };
 
 function fmtDate(ts: number): string {
@@ -54,7 +54,7 @@ export default async function RecordsPage() {
   return (
     <main className="container">
       <header className="page-head">
-        <h1>Records</h1>
+        <h1>Private Jet Records</h1>
         <p className="subtitle">
           The high-water marks of global private-jet activity since tracking began.
         </p>

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import Nav from '../components/Nav';
+import JsonLd from '../components/JsonLd';
 import './globals.css';
 
 // Google AdSense publisher ID. Defaults to the site's pub ID so the
@@ -40,6 +41,24 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <JsonLd
+          data={[
+            {
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Apocalypse Tracker',
+              url: 'https://apocalypsetracker.com',
+              description:
+                'Real-time private & business jet apocalypse indicator.',
+            },
+            {
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Apocalypse Tracker',
+              url: 'https://apocalypsetracker.com',
+            },
+          ]}
+        />
         <Nav />
         {children}
         {ADSENSE_CLIENT && (

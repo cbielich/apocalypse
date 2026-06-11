@@ -8,6 +8,8 @@ import './globals.css';
 // .env -> NEXT_PUBLIC_ADSENSE_CLIENT build arg. (Publisher IDs aren't secret.)
 const ADSENSE_CLIENT =
   process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-9360752375665568';
+const GA_ID = 
+  process.env.NEXT_PUBLIC_GA_ID || 'G-ZL1DE9RWG7';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://apocalypsetracker.com'),
